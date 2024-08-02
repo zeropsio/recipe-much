@@ -1,5 +1,8 @@
 project:
   name: Apache Airflow Recipe
+  tags:
+    - airflow
+    - recipe
 services:
   - hostname: redis
     priority: 10
@@ -18,7 +21,6 @@ services:
       minRam: 2
     maxContainers: 1
     buildFromGit: https://github.com/zeropsio/recipe-airflow
-    zeropsSetup: webserver
     enableSubdomainAccess: true
 
   - hostname: scheduler
@@ -27,20 +29,12 @@ services:
       minRam: 1
     maxContainers: 1
     buildFromGit: https://github.com/zeropsio/recipe-airflow
-    zeropsSetup: scheduler
 
-  - hostname: worker0
+  - hostname: workers
     type: python@3.12
     verticalAutoscaling:
-      minRam: 3
-    maxContainers: 1
+      minRam: 2
+      minFreeRamGB: 2
+    minContainers: 3
+    maxContainers: 3
     buildFromGit: https://github.com/zeropsio/recipe-airflow
-    zeropsSetup: worker
-
-  - hostname: worker1
-    type: python@3.12
-    verticalAutoscaling:
-      minRam: 3
-    maxContainers: 1
-    buildFromGit: https://github.com/zeropsio/recipe-airflow
-    zeropsSetup: worker

@@ -49,7 +49,7 @@ zerops:
         source .venv/bin/activate
         airflow scheduler
 
-  - setup: worker
+  - setup: workers
     extends: base
     run:
       start: |
