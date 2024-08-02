@@ -15,7 +15,7 @@ services:
     priority: 5
     type: python@3.12
     verticalAutoscaling:
-      minRam: 4
+      minRam: 2
     maxContainers: 1
     buildFromGit: https://github.com/zeropsio/recipe-airflow
     zeropsSetup: webserver
@@ -24,7 +24,7 @@ services:
   - hostname: scheduler
     type: python@3.12
     verticalAutoscaling:
-      minRam: 4
+      minRam: 1
     maxContainers: 1
     buildFromGit: https://github.com/zeropsio/recipe-airflow
     zeropsSetup: scheduler
@@ -32,7 +32,7 @@ services:
   - hostname: worker0
     type: python@3.12
     verticalAutoscaling:
-      minRam: 4
+      minRam: 3
     maxContainers: 1
     buildFromGit: https://github.com/zeropsio/recipe-airflow
     zeropsSetup: worker
@@ -40,7 +40,7 @@ services:
   - hostname: worker1
     type: python@3.12
     verticalAutoscaling:
-      minRam: 4
+      minRam: 3
     maxContainers: 1
     buildFromGit: https://github.com/zeropsio/recipe-airflow
     zeropsSetup: worker
