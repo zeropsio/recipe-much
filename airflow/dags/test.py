@@ -5,7 +5,7 @@ from airflow.operators.bash import BashOperator
 
 my_dag = DAG(
     dag_id="my_dag_name",
-    start_date=datetime(2024, 8, 2),
+    start_date=datetime.now(),
     schedule="* * * * *",
 )
 
