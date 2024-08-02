@@ -21,6 +21,14 @@ services:
     zeropsSetup: webserver
     enableSubdomainAccess: true
 
+  - hostname: scheduler
+    type: python@3.12
+    verticalAutoscaling:
+      minRam: 4
+    maxContainers: 1
+    buildFromGit: https://github.com/zeropsio/cheap-data-platform
+    zeropsSetup: scheduler
+
   - hostname: worker0
     type: python@3.12
     verticalAutoscaling:
@@ -36,12 +44,3 @@ services:
     maxContainers: 1
     buildFromGit: https://github.com/zeropsio/cheap-data-platform
     zeropsSetup: worker
-
-  - hostname: scheduler
-    type: python@3.12
-    verticalAutoscaling:
-      minRam: 4
-    maxContainers: 1
-    buildFromGit: https://github.com/zeropsio/cheap-data-platform
-    zeropsSetup: scheduler
-

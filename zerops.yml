@@ -4,7 +4,6 @@ zerops:
       buildCommands:
         - echo "Remove build section when possible."
       deployFiles:
-        - README.md
         - airflow/dags/
     run:
       os: ubuntu
@@ -25,28 +24,31 @@ zerops:
           python --version
           pip install --upgrade pip
           pip install "apache-airflow[celery,postgres,redis]==2.9.3" --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.9.3/constraints-3.12.txt"
-      initCommands:
-        - mkdir -p $AIRFLOW_HOME
-        - |
-          source .venv/bin/activate
-          zsc execOnce migrate -- airflow db migrate
-          zsc execOnce create-user -- airflow users create --username admin --firstname Matej --lastname Pavlicek --role Admin --email tikinang@gmail.com --password ${db_password}
       start: zsc noop
-  - setup: scheduler
-    extends: base
-    run:
-      start: |
-        source .venv/bin/activate
-        airflow scheduler
+
   - setup: webserver
     extends: base
     run:
       ports:
         - port: 8080
           httpSupport: true
+      initCommands:
+        - mkdir -p $AIRFLOW_HOME
+        - |
+          source .venv/bin/activate
+          zsc execOnce migrate -- airflow db migrate
+          zsc execOnce create-user -- airflow users create --username admin --firstname Data --lastname Maniac --role Admin --email dev@zerops.io --password ${db_password}
       start: |
         source .venv/bin/activate
         airflow webserver
+
+  - setup: scheduler
+    extends: base
+    run:
+      start: |
+        source .venv/bin/activate
+        airflow scheduler
+
   - setup: worker
     extends: base
     run:
