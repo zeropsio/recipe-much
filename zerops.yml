@@ -1,0 +1,55 @@
+zerops:
+  - setup: base
+    build:
+      buildCommands:
+        - echo "Remove build section when possible."
+      deployFiles:
+        - README.md
+        - airflow/dags/
+    run:
+      os: ubuntu
+      base: python@3.12
+      envVariables:
+        # FIXME(tikinang): Change to shared storage.
+        AIRFLOW_HOME: /var/www/airflow
+        AIRFLOW__CORE__LOAD_EXAMPLES: False
+        AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+        AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${db_user}:${db_password}@db/db
+        AIRFLOW__CELERY__BROKER_URL: redis://redis:6379/0
+        AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://${db_user}:${db_password}@db/db
+      prepareCommands:
+        - python3 -m venv /var/www/.venv
+        - |
+          cd /var/www
+          source .venv/bin/activate
+          python --version
+          pip install --upgrade pip
+          pip install "apache-airflow[celery,postgres,redis]==2.9.3" --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.9.3/constraints-3.12.txt"
+      initCommands:
+        - mkdir -p $AIRFLOW_HOME
+        - |
+          source .venv/bin/activate
+          zsc execOnce migrate -- airflow db migrate
+          zsc execOnce create-user -- airflow users create --username admin --firstname Matej --lastname Pavlicek --role Admin --email tikinang@gmail.com --password ${db_password}
+      start: zsc noop
+  - setup: scheduler
+    extends: base
+    run:
+      start: |
+        source .venv/bin/activate
+        airflow scheduler
+  - setup: webserver
+    extends: base
+    run:
+      ports:
+        - port: 8080
+          httpSupport: true
+      start: |
+        source .venv/bin/activate
+        airflow webserver
+  - setup: worker
+    extends: base
+    run:
+      start: |
+        source .venv/bin/activate
+        airflow celery worker

@@ -1,0 +1,47 @@
+project:
+  name: Much MUCH cheaper data platform
+services:
+  - hostname: redis
+    priority: 10
+    type: keydb@6
+    mode: NON_HA
+
+  - hostname: db
+    priority: 10
+    type: postgresql@16
+    mode: NON_HA
+
+  - hostname: webserver
+    priority: 5
+    type: python@3.12
+    verticalAutoscaling:
+      minRam: 4
+    maxContainers: 1
+    buildFromGit: https://github.com/zeropsio/cheap-data-platform
+    zeropsSetup: webserver
+    enableSubdomainAccess: true
+
+  - hostname: worker0
+    type: python@3.12
+    verticalAutoscaling:
+      minRam: 4
+    maxContainers: 1
+    buildFromGit: https://github.com/zeropsio/cheap-data-platform
+    zeropsSetup: worker
+
+  - hostname: worker1
+    type: python@3.12
+    verticalAutoscaling:
+      minRam: 4
+    maxContainers: 1
+    buildFromGit: https://github.com/zeropsio/cheap-data-platform
+    zeropsSetup: worker
+
+  - hostname: scheduler
+    type: python@3.12
+    verticalAutoscaling:
+      minRam: 4
+    maxContainers: 1
+    buildFromGit: https://github.com/zeropsio/cheap-data-platform
+    zeropsSetup: scheduler
+
