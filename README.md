@@ -5,5 +5,5 @@
 <br />
 
 # TODO
-- [ ] add shared storage (disc) for airflow home, set AIRFLOW_HOME=/mnt/disc
+- [ ] add shared storage (disc) for airflow home, set AIRFLOW_HOME=/mnt/dics
 - [ ] git pull to $AIRFLOW_HOME/dags

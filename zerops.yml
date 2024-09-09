@@ -1,8 +1,6 @@
 zerops:
-  - setup: base
+  - setup: airflow-base
     build:
-      buildCommands:
-        - echo "Remove build section when possible."
       deployFiles:
         - airflow/dags/
     run:
@@ -11,7 +9,8 @@ zerops:
       envVariables:
         # FIXME(tikinang): Change to shared storage.
         AIRFLOW_HOME: /var/www/airflow
-        AIRFLOW__CORE__LOAD_EXAMPLES: False
+#        AIRFLOW_HOME: /mnt/disc/airflow
+        AIRFLOW__CORE__LOAD_EXAMPLES: "False"
         AIRFLOW__CORE__EXECUTOR: CeleryExecutor
         AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${db_user}:${db_password}@db/db
         AIRFLOW__CELERY__BROKER_URL: redis://redis:6379/0
@@ -26,8 +25,8 @@ zerops:
           pip install "apache-airflow[celery,postgres,redis]==2.9.3" --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.9.3/constraints-3.12.txt"
       start: zsc noop
 
-  - setup: webserver
-    extends: base
+  - setup: airflowui
+    extends: airflow-base
     run:
       ports:
         - port: 8080
@@ -37,21 +36,83 @@ zerops:
         - |
           source .venv/bin/activate
           zsc execOnce migrate -- airflow db migrate
-          zsc execOnce create-user -- airflow users create --username admin --firstname Data --lastname Maniac --role Admin --email dev@zerops.io --password ${db_password}
+          zsc execOnce create-user -- airflow users create --username admin --firstname Data --lastname Lover --role Admin --email dev@zerops.io --password ${db_password}
       start: |
         source .venv/bin/activate
         airflow webserver
 
-  - setup: scheduler
-    extends: base
+  - setup: airflowscheduler
+    extends: airflow-base
     run:
       start: |
         source .venv/bin/activate
         airflow scheduler
 
-  - setup: workers
-    extends: base
+  - setup: airflowworkers
+    extends: airflow-base
     run:
       start: |
         source .venv/bin/activate
         airflow celery worker
+
+# FIXME(tikinang): Change to shared storage.
+  - setup: airflowdags
+    build:
+      deployFiles: ./
+    run:
+      os: alpine
+      base: python@3.12
+      envVariables:
+        AIRFLOW_HOME: /mnt/disc/airflow
+      initCommands:
+        - mkdir -p /mnt/disc/airflow
+        - cp -r airflow/dags /mnt/disc/airflow/dags
+      start: zsc noop
+
+  # Spark
+  - setup: spark-base
+    build:
+      deployFiles:
+        - README.md
+    run:
+      os: ubuntu
+      base: java@21
+      prepareCommands:
+        - wget https://dlcdn.apache.org/spark/spark-3.5.2/spark-3.5.2-bin-hadoop3.tgz
+        - tar -xvf spark-3.5.2-bin-hadoop3.tgz -C /var/www
+        - rm spark-3.5.2-bin-hadoop3.tgz
+        - sudo chown -R zerops:zerops /var/www/spark-3.5.2-bin-hadoop3
+
+  - setup: sparkmaster
+    extends: spark-base
+    run:
+      ports:
+        - port: 8080
+          protocol: tcp
+          httpSupport: true
+          description: Master Web UI
+        - port: 4040
+          protocol: tcp
+          httpSupport: true
+          description: Driver Web UI
+        - port: 15002
+          protocol: tcp
+          httpSupport: false
+          description: Spark Connect
+        - port: 7077
+          protocol: tcp
+          httpSupport: false
+          description: Master
+      start: |
+        sudo chown -R zerops:zerops spark-3.5.2-bin-hadoop3
+        cd spark-3.5.2-bin-hadoop3
+        ./sbin/start-master.sh
+        zsc noop
+
+  - setup: sparkexecutors
+    extends: spark-base
+    run:
+      start: |
+        cd spark-3.5.2-bin-hadoop3
+        ./sbin/start-worker.sh
+        zsc noop
